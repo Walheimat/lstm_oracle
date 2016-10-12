@@ -326,9 +326,9 @@ def main():
 	
 	# neuer Anfang? Wiederaufnahme? andere Konfiguration?
 	if resume or generate_only:
-		text = TextObject(manip.truncate(input), input_c, resuming=True)	
+		text = TextObject(manip.truncate(input), input_c, resuming=True, word=True)	
 	else:
-		text = TextObject(manip.truncate(input), input_c, limit=word_limit, training=no_of_epochs)
+		text = TextObject(manip.truncate(input), input_c, limit=word_limit, training=no_of_epochs, word=True)
 	if generate_only:
 		log("Es wird, ausgehend von der gespeicherten Gewichtung (Wortlimit {0}), ein {1} Zeichen langer Text mit diversity-Grad {2} generiert.".format(word_limit, output_length, diversity))
 	else:
@@ -341,6 +341,20 @@ def main():
 				log("Vorgang wird abgebrochen.")
 				sys.exit(2)
 		log("Das Netzwerk wird {0} Epoche(n) lang trainiert.".format(text.training))
+		
+	if resume:
+		log("\nEs wird mit folgender Konfiguration weitertrainiert:")
+		log("Wortlimit:", text.limit)
+		log("Epochenanzahl:", text.training)
+		log("Durchlauf:", text.iteration)
+		log("Verlust:", text.loss)
+		log("\nIst das so richtig?(J/n)")
+		answer = raw_input("\a> ")
+		if answer in "J":
+			log("Dann fahren wir fort.")
+		else:
+			log("Vorgang wird abgebrochen.")
+			sys.exit(2)
 		
 	activate_backend() # Theano wird importiert
 	vectorize() # die Vektoren werden erstellt
@@ -357,11 +371,13 @@ def main():
 		
 		# der durchschnittliche Verlust wird errechnet
 		losses_sum = 0.0
+		losses_r = 0.0
 		for i in history.losses:
 			losses_sum += float(i)
-		log('Durchschnitt:', round(losses_sum / len(history.losses), 10))
+			losses_r =  round(losses_sum / len(history.losses), 10)
+		log('Durchschnitt:', losses_r)
 	
-	text.save_config() # die Konfiguration wird gespeichert
+		text.save_config(losses_r) # die Konfiguration wird gespeichert
 	
 	# Textgenerierung
 	if arbitrary_seed:
