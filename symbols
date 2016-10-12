@@ -1,0 +1,20 @@
+# Alphabet klein (26)
+abcdefghijklmnopqrstuvwxyz
+# Alphabet groß (26)
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+# andere Buchstaben klein (30)
+àáâãäåæçèéêëìíîïñòóôõöøœùúûüýß
+# andere Buchstaben groß (29)
+ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØŒÙÚÛÜÝ
+#Anführungszeichen (8)
+"'«»„“‚‘
+# einfache Satzzeichen (6)
+,.;:!?
+# weitere Zeichen (14)
+&(){}~_|@€µ§$%
+# mathematische Symbole (7)
++-*=<>/
+# Zahlen (10)
+0123456789
+#Testzeichen
+^°
