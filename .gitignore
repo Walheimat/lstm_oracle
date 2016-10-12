@@ -20,19 +20,13 @@ $RECYCLE.BIN/
 # Textdateien
 *.txt
 !readme.txt
+!readme_word.txt
 
 # JSON-Dateien
 *.json
 
 # kompilierter Python-Code
 *.pyc
-
-# alter Code
-_lstm_char.py
-_logging.py
-_str_manipulation.py
-_o_classes.py
-_test.py
 
 # Gewichtungen
 *.hdf5
