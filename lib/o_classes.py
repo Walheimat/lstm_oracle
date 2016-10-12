@@ -6,15 +6,16 @@ import random
 # und die Zahl der Durchläufe pro Zeichenlimit festzuhalten
 class TextObject:
 
-	def __init__(self, name, content, charset="undefined", limit=10000, training=10, resuming=False):
+	def __init__(self, name, content, charset="undefined", limit=10000, training=10, resuming=False, word=False):
 		self.name = name
 		self.content = content
+		self.word = word
 		
 		if not resuming:
+			self.charset = charset
 			self.training = training
 			self.limit = limit
 			self.weights = self.name
-			self.charset = charset
 			self.iterations = self._get_iterations()
 			if str(self.limit) in self.iterations:
 				self.iteration = self.iterations[str(self.limit)]
@@ -31,7 +32,7 @@ class TextObject:
 		
 	def _get_iterations(self):
 		try:
-			if self.charset is "undefined":
+			if self.word:
 				path = "cfg/word/" + self.name + "/config.json"
 			else:
 				path = "cfg/" + self.name + "/config.json"
@@ -45,15 +46,15 @@ class TextObject:
 		except IOError as err:
 			print(err)
 		
-	def save_config(self):
+	def save_config(self, loss=None):
 		try:
-			if self.charset is "undefined":
+			if self.word:
 				path ="cfg/word/" + self.name + "/"
 			else:
 				path = "cfg/" + self.name + "/"
 			if not os.path.exists(path):
 				os.makedirs(path)	
-			data ={"weights" : self.weights, "limit" : self.limit, "training" : self.training, "iterations" : self.iterations, "charset" : self.charset}
+			data ={"weights" : self.weights, "limit" : self.limit, "training" : self.training, "iterations" : self.iterations, "charset" : self.charset, "loss" : loss}
 			with open(path + "config.json", "w") as file:
 				json.dump(data, file)
 		except IOError as err:
@@ -61,7 +62,10 @@ class TextObject:
 			
 	def _load_config(self):
 		try:
-			path = "cfg/" + self.name + "/config.json"
+			if self.word:
+				path = "cfg/word/" + self.name + "/config.json"
+			else:
+				path = "cfg/" + self.name + "/config.json"
 			if os.path.isfile(path):
 				with open(path) as file:    
 					data = json.load(file)
@@ -71,8 +75,9 @@ class TextObject:
 					self.iterations = data["iterations"]
 					self.charset = data["charset"]
 					self.iteration = self.iterations[str(self.limit)]
+					self.loss = data["loss"]
 			else:
-				log("Datei existiert nicht!")
+				print("Datei existiert nicht!")
 		except IOError as err:
 			print(err)
 			

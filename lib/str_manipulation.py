@@ -34,23 +34,6 @@ def concatenate_wordlist(lst):
 	
 	return converted
 	
-def set_test():
-	first = "Gestern gingen wir nach Hause. Dann gingen wir weg, wir gingen weit weg"
-	second = "Gestern gingen wir nicht nach Hause. Nein, wir gingen weg, wir gingen nicht weit weg"
-	
-	#print("first:", set(first.split(" ")))
-	#print("second:", set(second.split(" ")))
-	
-	firstlist = list(first.split(" "))
-	firstunique = reduce(lambda l, x: l.append(x) or l if x not in l else l, firstlist, [])
-	
-	seclist = list(second.split(" "))
-	secunique = reduce(lambda l, x: l.append(x) or l if x not in l else l, seclist, [])
-	
-	print("firstunique:", firstunique)
-	print("secunique:", secunique)
-	
-	
 def get_punctuation():
 	punctuation = ""
 	
@@ -92,18 +75,19 @@ def convert_to_full(txt):
 	
 	return new_out
 	
-# eigentlich nur für Backups wichtig
 def generate_seed():
 	sequence = list(string.hexdigits)
 	random.shuffle(sequence)
 	current_time = time.strftime("%d-%m-%Y")
 	return "".join(sequence)[0:4] + "_" + current_time
 	
-def get_charset(c):
+def get_charset_and_dimensionality(c):
 	if c in "expanded":
-		return printable_exp
+		return printable_exp, len(printable_exp)
 	elif c in "ascii":
-		return string.printable
+		return string.printable, len(string.printable)
+	elif c in "full":
+		return get_full_charset(), 200
 
 # entfernt die byte order mark
 def remove_bom(txt):

@@ -14,7 +14,7 @@ from lib.o_classes import *
 
 # falls die Verzeichnisse noch nicht existieren sollten, werden sie erstellt
 def make_dirs():
-	paths = ["json/", "output/", "input/", "cfg/", "weights/", "json/ascii", "json/expanded", "json/experimental", "weights/ascii", "weights/expanded", "weights/experimental"]
+	paths = ["json/", "output/", "input/", "cfg/", "weights/", "json/ascii", "json/expanded", "json/full", "weights/ascii", "weights/expanded", "weights/full"]
 	for i in paths:
 		if not os.path.exists(i):
 			os.makedirs(i)
@@ -42,7 +42,7 @@ def activate_backend():
 			def on_batch_end(self, batch, logs={}):
 				self.losses.append(logs.get('loss'))
 	except ImportError:
-		log("Module nicht gefunden!")
+		log("Module nicht gefunden! Wurden Theano und Keras installiert?")
 			
 # Vektorisierung
 def vectorize():
@@ -50,17 +50,10 @@ def vectorize():
 	
 	log("\n[2]\nvektorisiere...")
 	
-	if text.charset in "experimental":
-		chars = manip.get_full_charset()
-		dimensionality = 200
-	else:
-		chars = set(manip.get_charset(text.charset))
-		dimensionality = len(chars)
+	chars, dimensionality = manip.get_charset_and_dimensionality(text.charset)
 
 	char_indices = dict((c, i) for i, c in enumerate(chars)) # Indizierung
-	#print("char_indices:", char_indices)
 	indices_char = dict((i, c) for i, c in enumerate(chars))
-	#print("indices_char:", indices_char)
 	
 	# der Text wird alle drei Zeichen in 40 Zeichen lange "Sätze" zerlegt
 	step = 3
@@ -75,7 +68,7 @@ def vectorize():
 		log("Sequenzen:", len(sentences))
 		log("Zeichenlimit:", text.limit)
 		log("Ausschnitt:\n", text.print_snippet(500))
-		log("Zeichenvorrat:", chars)
+		log("Zeichenvorrat:", text.charset)
 		log("Dimensionalität:", dimensionality)
 	
 	# die Vektoren werden erstellt
@@ -157,15 +150,18 @@ def train_network():
 	
 # Textgenerierung
 def generate_text():
+
 	if generate_only:
 		log("\n[4]\nGenerierung läuft...\n")
 	else:
 		log("\n[5]\nGenerierung läuft...\n")
+		
 	start_index = random.randint(0, len(text.content) - scope - 1)
 	sentence = text.content[start_index: start_index + scope]
 	generated = ""
 	generated += sentence
 	errors = 0
+	
 	# hier wird live generiert
 	for i in range(output_length):
 		x = np.zeros((1, scope, dimensionality))
@@ -181,34 +177,38 @@ def generate_text():
 			sys.stdout.flush()
 		except UnicodeEncodeError as err:
 			errors += 1
+			
 	log("\nFehleranzahl:", errors)
+	
 	save_text(generated)
 
 # Textgenerierung mit Seed
 def generate_with_arbitrary_seed():
+
 	if generate_only:
 		log("\n[4]\nWelcher Satz soll der Generierung zugrunde liegen?")
 		seed = raw_input("\a> ")
 	else:
 		log("\n[5]\nWelcher Satz soll der Generierung zugrunde liegen?")
 		seed = raw_input("\a> ")
-			
-	seed_dec = seed.decode(sys.stdin.encoding)
+	
 	# wir gewährleisten, dass der Seed mit dem Netzwerk kompatibel ist
+	seed_dec = seed.decode(sys.stdin.encoding)
 	if text.charset in "ascii":
 		sentence = manip.convert_to_ascii(seed_dec)
-	elif text.charset in "experimental":
-		sentence = seed_dec
 	elif text.charset in "expanded":
 		sentence = manip.convert_to_expanded(seed_dec)
+	elif text.charset in "full":
+		sentence = seed_dec
 	if len(sentence) > scope:
 		sentence = sentence[-scope:]
+		
 	generated = ""
 	vector_difference = scope - len(sentence)
 	errors = 0
-	#log("sentence:", sentence)
 	
 	log("\n(das Netzwerk antwortet)\n")
+	
 	for i in range(output_length):
 		x = np.zeros((1, scope, dimensionality))
 		for t, char in enumerate(sentence):
@@ -225,25 +225,29 @@ def generate_with_arbitrary_seed():
 			sys.stdout.flush()
 		except UnicodeEncodeError as err:
 			errors += 1
+			
 	log("\nFehleranzahl:", errors)
+	
 	save_text(generated)	
 			
 # Speichern der Ausgabe
 def save_text(txt):
+
 	if generate_only:
 		log("\n\n[5]\nspeichere generierten Text...")
 	else:
 		log("\n\n[6]\nspeichere generierten Text...")
+		
 	directory = 'output/' + text.name + '/'
 	if not os.path.exists(directory):
 		os.makedirs(directory)
-		
 	random_seed = manip.generate_seed()
 	output_name = text.charset + "_" + random_seed + '.txt'
 	with open(directory + output_name, 'w') as file:
-		if text.charset in "experimental":
+		if text.charset in "full":
 			txt = txt.encode("utf-8", "ignore")
 		file.write(txt)
+	
 	log("Die Ausgabe findest du hier:", directory + output_name)
 		
 def sample(a, temperature=1.0):
@@ -253,12 +257,12 @@ def sample(a, temperature=1.0):
 	
 # das Programm wird konfiguriert	
 def check_arguments(opts):
-	global input, fresh, resume, no_of_epochs, other_weights, character_limit, generate_only, output_length, diversity, arbitrary_seed, mutual_exclusives, dyn_range, verbose, ascii, experimental
+	global input, fresh, resume, no_of_epochs, other_weights, character_limit, generate_only, output_length, diversity, arbitrary_seed, mutual_exclusives, dyn_range, verbose, ascii, expanded
 	
 	input = None; fresh = False; resume = False # Training allgemein
 	no_of_epochs = 10; other_weights = False; character_limit = 100000; dyn_range = False # Training im Speziellen
 	generate_only = False; output_length = 500; diversity = 0.2; arbitrary_seed = False # Textgenerierung
-	mutual_exclusives = 0; verbose = False; ascii = False; experimental = False; update = False
+	mutual_exclusives = 0; verbose = False; ascii = False; expanded = False
 	
 	for o, a in opts:
 		if o in ("-h", "--help"):
@@ -297,10 +301,8 @@ def check_arguments(opts):
 			verbose = True
 		elif o in ("-a", "--ascii"):
 			ascii = True
-		elif o in ("-x", "--experimental"):
-			experimental = True
-		elif o in ("-u", "--update"):
-			update = True
+		elif o in ("-p", "--expanded"):
+			expanded = True
 		else:
 			assert False, "Die Option existiert nicht!"
 
@@ -311,7 +313,7 @@ def main():
 	
 	# die Argumente der Befehlszeile werden eingelesen
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hi:nrg:d:e:ol:syvaux", ["help", "input=", "new", "resume", "generate=", "diversity=", "epochs=", "other", "limit=", "seed", "dynamic", "verbose", "ascii", "experimental"])
+		opts, args = getopt.getopt(sys.argv[1:], "hi:nrg:d:e:ol:syvap", ["help", "input=", "new", "resume", "generate=", "diversity=", "epochs=", "other", "limit=", "seed", "dynamic", "verbose", "ascii", "expanded"])
 	except getopt.GetoptError as err:
 		print(str(err))
 		usage()
@@ -321,12 +323,12 @@ def main():
 	# wir prüfen, ob die gewählten Optionen stimmig sind
 	assert type(input) is str, "Ausgangstext muss angegeben werden!"
 	assert mutual_exclusives <= 1, "Die gewählten Verfahren sind nicht kombinierbar!"
-	assert ascii and not experimental or experimental and not ascii or not ascii and not experimental, "Mehrere Zeichensätze ausgewählt!"
+	assert ascii and not expanded or expanded and not ascii or not ascii and not expanded, "Mehrere Zeichensätze ausgewählt!"
 	
 	make_dirs() # falls die Verzeichnisse noch nicht erstellt wurden
 	
 	dec_print("=LSTM_CHAR.PY")	
-	log("öffne und konvertiere", input, "...")
+	log("öffne und konvertiere", input + "...")
 	
 	# Textdatei wird eingelesen und konvertiert
 	try:
@@ -336,12 +338,13 @@ def main():
 		with open(path) as file:
 			if ascii:
 				input_c = manip.convert_to_ascii(file.read())
-			elif experimental:
-				input_c = manip.convert_to_full(file.read())
-			else:
+			elif expanded:
 				input_c = manip.convert_to_expanded(file.read())
+			else:
+				input_c = manip.convert_to_full(file.read())
 	except EnvironmentError:
 		print("Datei {0} nicht gefunden!".format(input))
+		sys.exit(2)
 	
 	if type(character_limit) is str and character_limit in "max":
 		character_limit = len(input_c)
@@ -357,23 +360,34 @@ def main():
 	else:
 		if ascii:
 			text = TextObject(manip.truncate(input), input_c, "ascii", limit=character_limit, training=no_of_epochs)
-		elif experimental:
-			text = TextObject(manip.truncate(input), input_c, "experimental", limit=character_limit, training=no_of_epochs)
-		else:
+		elif expanded:
 			text = TextObject(manip.truncate(input), input_c, "expanded", limit=character_limit, training=no_of_epochs)
+		else:
+			text = TextObject(manip.truncate(input), input_c, "full", limit=character_limit, training=no_of_epochs)
 	if generate_only:
 		log("Es wird, ausgehend von der gespeicherten Gewichtung (Zeichenlimit {0}), ein {1} Zeichen langer Text mit diversity-Grad {2} generiert.".format(character_limit, output_length, diversity))
 	else:
 		if fresh:
 			log("Sicher, dass von 0 an trainiert werden soll?(J/n)")
 			answer = raw_input("\a> ")
-			if answer in "J":
-				log("Dann fahren wir fort.")
-			else:
-				log("Vorgang wird abgebrochen.")
-				sys.exit(2)
+
 		log("Das Netzwerk wird {0} Epoche(n) lang trainiert.".format(text.training))
 		
+	if resume:
+		log("\nEs wird mit folgender Konfiguration weitertrainiert:")
+		log("Zeichenlimit:", text.limit)
+		log("Zeichensatz:", text.charset)
+		log("Epochenanzahl:", text.training)
+		log("Durchlauf:", text.iteration)
+		log("Verlust:", text.loss)
+		log("\nIst das so richtig?(J/n)")
+		answer = raw_input("\a> ")
+		if answer in "J":
+			log("Dann fahren wir fort.")
+		else:
+			log("Vorgang wird abgebrochen.")
+			sys.exit(2)
+			
 	activate_backend() # Theano wird importiert
 	vectorize() # die Vektoren werden erstellt
 	build_model() # das Modell wird erstellt oder zusammen mit der gespeicherten Matrix geladen
@@ -405,11 +419,13 @@ def main():
 		
 		# der durchschnittliche Verlust wird errechnet
 		losses_sum = 0.0
+		losses_r = 0.0
 		for i in history.losses:
 			losses_sum += float(i)
-		log('Durchschnitt:', round(losses_sum / len(history.losses), 10))
+			losses_r =  round(losses_sum / len(history.losses), 10)
+		log('Durchschnitt:', losses_r)
 	
-	text.save_config() # die Konfiguration wird gespeichert
+		text.save_config(losses_r) # die Konfiguration wird gespeichert
 	
 	# Textgenerierung
 	if arbitrary_seed:

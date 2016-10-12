@@ -5,8 +5,8 @@ HILFE/GEBRAUCHSANWEISUNG
 
 --help | -h : zeigt die Gebrauchsanweisung an, also genau diese hier (readme.txt)
 --verbose | -v : zeichnet den Programmverlauf ausführlicher nach
---ascii | -a : konvertiert den Text nach ASCII; ansonsten besteht der Zeichensatz aus ASCII + äöüÄÖÜß"
---experimental | -x : konvertiert den Text nach Unicode; ansonsten besteht der Zeichensatz aus ASCII + äöüÄÖÜß"
+--ascii | -a : konvertiert den Text nach ASCII; ansonsten wird der Text nach Unicode dekodiert
+--expanded | -p : konvertiert den Text nach ASCII + äöüÄÖÜß"; ansonsten wird der Text nach Unicode dekodiert
 
 --input <Textdatei> | -i <Textdatei> : der Ausgangstext, dieser sollte im Verzeichnis /input abgelegt sein; Beispiel: -i mobydick.txt
 
