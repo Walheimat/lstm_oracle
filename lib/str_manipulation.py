@@ -37,7 +37,7 @@ def concatenate_wordlist(lst):
 def get_punctuation():
 	punctuation = ""
 	
-	with open("punctuation") as file:
+	with open("docs/punctuation") as file:
 		for line in file:
 			if not line.startswith("#"):
 				punctuation += line.strip()
@@ -53,7 +53,7 @@ def get_full_charset():
 	full_charset += "\n ".decode("utf-8")
 	
 	# der externe Zeichensatz wird geladen
-	with open("symbols") as file:
+	with open("docs/symbols") as file:
 		for line in file:
 			if not line.startswith("#"):
 				full_charset += line.strip().decode("utf-8")
