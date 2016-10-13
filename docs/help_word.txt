@@ -1,0 +1,33 @@
+
+========================
+HILFE/GEBRAUCHSANWEISUNG
+========================
+
+--help | -h : zeigt die Gebrauchsanweisung an, also genau diese hier (readme_word.txt)
+--verbose | -v : zeichnet den Programmverlauf ausführlicher nach
+
+--input <Textdatei> | -i <Textdatei> : der Ausgangstext, dieser sollte im Verzeichnis /input abgelegt sein; Beispiel: -i mobydick.txt
+
+# TEXT GENERIEREN #
+
+--generate <Ganzzahl> | -g <Ganzzahl> : es wird mithilfe der gespeicherten Gewichtung_nur ausgegeben_. Die geladene Matrix ist, wenn kein Limit festgelegt wurde, immer die zuletzt gespeicherte; die Zahl legt die Länge [in Wörtern] der Ausgabe fest; standardmäßig 50; Beispiel: -g 400
+--seed | -s : es wird von einem später anzugebenden Seed aus weitergeschrieben
+--diversity <Gleitkommazahl> | -d <Gleitkommazahl> : legt den Grad fest, zu dem abgewichen werden darf; standardmäßig 0.2; Höchstwert 2.0; Beispiel: -d 1.2
+
+# NETZWERK TRAINIEREN #
+
+--new | -n : das Netzwerk wird von Null an trainiert, die Gewichtung wird _für das festgelegte Zeichenbeschränkung_ gespeichert
+--resume | -r : das Training wird mithilfe der _zuletzt_ gespeicherten Konfiguration (Gewichtung, Wortbeschränkung, Anzahl der Epochen) wiederaufgenommen, die Gewichtung wird gespeichert
+--epochs <Ganzzahl> | -e <Ganzzahl> : legt die Anzahl der Durchläufe fest, bevor die Matrix gespeichert wird; standardmäßig 10; Beispiel: -e 5
+--limit <Ganzzahl> | -l <Ganzzahl> ODER -s max : legt die Wortbeschränkung fest; standardmäßig 1000; für jedes Limit wird eine eigene Gewichtung gespeichert
+--dynamic | -y : verschiebt den Anfang des Textausschnitts um einen zufälligen Betrag
+
+-------------
+
+# ABWEICHUNG VON LSTM_CHAR #
+
+Bisher sind die trainierten Netzwerke untereinander _nicht kompatibel_. Das liegt daran, dass die Dimensionalität des Vektors von der Anzahl eindeutiger Wörter abhängig ist. Diese werden als nicht geordnetes Set verwendet. D. h. unter anderem auch, dass das gleiche Wort in verschiedenen Texten eine andere Stelle einnehmen kann. Also auch zwei Texte, die die gleiche Anzahl eindeutiger Wörter, sogar die genau gleichen Wörter in anderer Reihenfolge haben, produzieren inkompatible Netzwerke.
+
+========================
+HILFE/GEBRAUCHSANWEISUNG
+========================

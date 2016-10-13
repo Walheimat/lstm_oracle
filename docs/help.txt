@@ -8,7 +8,7 @@ HILFE/GEBRAUCHSANWEISUNG
 --ascii | -a : konvertiert den Text nach ASCII; ansonsten wird der Text nach Unicode dekodiert
 --expanded | -p : konvertiert den Text nach ASCII + äöüÄÖÜß"; ansonsten wird der Text nach Unicode dekodiert
 
---input <Textdatei> | -i <Textdatei> : der Ausgangstext, dieser sollte im Verzeichnis /input abgelegt sein; Beispiel: -i mobydick.txt
+--input <Textdatei> | -i <Textdatei> : der Ausgangstext, dieser sollte im Verzeichnis /input abgelegt sein; Beispiel: -i wahlverwandschaften.txt
 
 # TEXT GENERIEREN #
 

@@ -390,7 +390,7 @@ def main():
 # Hilfe
 def usage():
 	try:
-		with open("readme_word.txt") as file:
+		with open("docs/help_word.txt") as file:
 			log(file.read())
 	except IOError as err:
 		print(err)

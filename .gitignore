@@ -19,8 +19,8 @@ $RECYCLE.BIN/
 
 # Textdateien
 *.txt
-!readme.txt
-!readme_word.txt
+!help.txt
+!help_word.txt
 
 # JSON-Dateien
 *.json
