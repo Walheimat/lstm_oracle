@@ -8,7 +8,7 @@ import string
 import json
 import math
 import codecs
-from lib import str_manipulation as manip
+from lib import manipulation as manip
 from lib.logging import *
 from lib.o_classes import *
 
@@ -67,7 +67,7 @@ def vectorize():
 	if verbose:
 		log("Sequenzen:", len(sentences))
 		log("Zeichenlimit:", text.limit)
-		log("Ausschnitt:\n", text.print_snippet(500))
+		log("Ausschnitt:", text.print_snippet(50))
 		log("Zeichenvorrat:", text.charset)
 		log("Dimensionalität:", dimensionality)
 	
@@ -169,6 +169,10 @@ def generate_text():
 			x[0, t, char_indices[char]] = 1.
 		preds = model.predict(x, verbose=0)[0]
 		next_index = sample(preds, diversity)
+		if not expanded and not ascii:
+			if next_index > 159:
+				next_index = 159
+				errors += 1
 		next_char = indices_char[next_index]
 		generated += next_char
 		sentence = sentence[1:] + next_char
@@ -181,6 +185,71 @@ def generate_text():
 	log("\nFehleranzahl:", errors)
 	
 	save_text(generated)
+
+# Gespräch mit dem Netzwerk	
+def talk_with_network():
+	log("\n[4]\nWir versuchen ein Gespräch mit dem Netzwerk!")
+	
+	generated = ""
+	answer_median = output_length
+	errors = 0
+	
+	talking = True
+	log("\nSag etwas!(Mit /end beendest du das Gespräch)")
+	while talking:
+		seed = raw_input("\a> ")
+		sentence = seed.decode(sys.stdin.encoding) + " "
+		if sentence in "/end ":
+			break
+		if len(sentence) > scope:
+			sentence = sentence[-scope:]
+			
+		generated += "\n\n<<< " + sentence + "\n"
+		vector_difference = scope - len(sentence)
+		
+		answer_length = int(answer_median * random.triangular(0, 2))
+		diversity, mood = manip.get_proximity_as_diversity_and_mood(sentence)
+		if verbose:
+			log("diversity:", diversity)
+			log("mood:", mood)
+			print()
+		first_letter = True
+		
+		generated += ">>> "
+		print()
+		
+		for i in range(answer_length):
+			x = np.zeros((1, scope, dimensionality))
+			for t, char in enumerate(sentence):
+				x[0, t + vector_difference, char_indices[char]] = 1.
+			
+			preds = model.predict(x, verbose=0)[0]
+			next_index = sample(preds, diversity)
+			if not expanded and not ascii:
+				if next_index > 159:
+					next_index = 159
+					errors += 1
+			next_char = indices_char[next_index]
+			
+			if first_letter:
+				next_char = next_char.upper()
+				first_letter = False
+			
+			generated += next_char
+			sentence = sentence[1:] + next_char
+			try:
+				sys.stdout.write(next_char)
+				sys.stdout.flush()
+			except UnicodeEncodeError as err:
+				errors += 1
+				
+			if next_char in ".":
+				break
+		log("\n")
+		
+	log("\nFehleranzahl:", errors)
+	
+	save_text(generated)	
 
 # Textgenerierung mit Seed
 def generate_with_arbitrary_seed():
@@ -216,6 +285,10 @@ def generate_with_arbitrary_seed():
 		
 		preds = model.predict(x, verbose=0)[0]
 		next_index = sample(preds, diversity)
+		if not expanded and not ascii:
+			if next_index > 159:
+				next_index = 159
+				errors += 1
 		next_char = indices_char[next_index]
 		
 		generated += next_char
@@ -257,11 +330,11 @@ def sample(a, temperature=1.0):
 	
 # das Programm wird konfiguriert	
 def check_arguments(opts):
-	global input, fresh, resume, no_of_epochs, other_weights, character_limit, generate_only, output_length, diversity, arbitrary_seed, mutual_exclusives, dyn_range, verbose, ascii, expanded
+	global input, fresh, resume, no_of_epochs, other_weights, character_limit, generate_only, talk_only, output_length, diversity, arbitrary_seed, mutual_exclusives, dyn_range, verbose, ascii, expanded
 	
 	input = None; fresh = False; resume = False # Training allgemein
 	no_of_epochs = 10; other_weights = False; character_limit = 100000; dyn_range = False # Training im Speziellen
-	generate_only = False; output_length = 500; diversity = 0.2; arbitrary_seed = False # Textgenerierung
+	generate_only = False; output_length = 500; diversity = 0.2; arbitrary_seed = False; talk_only = False # Textgenerierung
 	mutual_exclusives = 0; verbose = False; ascii = False; expanded = False
 	
 	for o, a in opts:
@@ -303,6 +376,8 @@ def check_arguments(opts):
 			ascii = True
 		elif o in ("-p", "--expanded"):
 			expanded = True
+		elif o in ("-t", "--talk"):
+			talk_only = True
 		else:
 			assert False, "Die Option existiert nicht!"
 
@@ -313,7 +388,7 @@ def main():
 	
 	# die Argumente der Befehlszeile werden eingelesen
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hi:nrg:d:e:ol:syvap", ["help", "input=", "new", "resume", "generate=", "diversity=", "epochs=", "other", "limit=", "seed", "dynamic", "verbose", "ascii", "expanded"])
+		opts, args = getopt.getopt(sys.argv[1:], "hi:nrg:d:e:ol:syvapt", ["help", "input=", "new", "resume", "generate=", "diversity=", "epochs=", "other", "limit=", "seed", "dynamic", "verbose", "ascii", "expanded", "talk"])
 	except getopt.GetoptError as err:
 		print(str(err))
 		usage()
@@ -324,6 +399,10 @@ def main():
 	assert type(input) is str, "Ausgangstext muss angegeben werden!"
 	assert mutual_exclusives <= 1, "Die gewählten Verfahren sind nicht kombinierbar!"
 	assert ascii and not expanded or expanded and not ascii or not ascii and not expanded, "Mehrere Zeichensätze ausgewählt!"
+	
+	if talk_only and ascii or talk_only and expanded:
+		usage()
+		sys.exit(2)
 	
 	make_dirs() # falls die Verzeichnisse noch nicht erstellt wurden
 	
@@ -341,7 +420,9 @@ def main():
 			elif expanded:
 				input_c = manip.convert_to_expanded(file.read())
 			else:
-				input_c = manip.convert_to_full(file.read())
+				t = file.read()
+				manip.create_word_table(t, verbose)
+				input_c = manip.convert_to_full(t)
 	except EnvironmentError:
 		print("Datei {0} nicht gefunden!".format(input))
 		sys.exit(2)
@@ -365,11 +446,17 @@ def main():
 		else:
 			text = TextObject(manip.truncate(input), input_c, "full", limit=character_limit, training=no_of_epochs)
 	if generate_only:
-		log("Es wird, ausgehend von der gespeicherten Gewichtung (Zeichenlimit {0}), ein {1} Zeichen langer Text mit diversity-Grad {2} generiert.".format(character_limit, output_length, diversity))
+		if talk_only:
+			log("Du wirst mit dem Netzwerk (Zeichenlimit {0}) sprechen!".format(character_limit))
+		else:
+			log("Es wird, ausgehend von der gespeicherten Gewichtung (Zeichenlimit {0}), ein {1} Zeichen langer Text mit diversity-Grad {2} generiert.".format(character_limit, output_length, diversity))
 	else:
 		if fresh:
 			log("Sicher, dass von 0 an trainiert werden soll?(J/n)")
 			answer = raw_input("\a> ")
+			if answer not in "J":
+				log("Vorgang wird abgebrochen.")
+				sys.exit(2)
 
 		log("Das Netzwerk wird {0} Epoche(n) lang trainiert.".format(text.training))
 		
@@ -430,6 +517,8 @@ def main():
 	# Textgenerierung
 	if arbitrary_seed:
 		generate_with_arbitrary_seed()
+	elif talk_only:
+		talk_with_network()
 	else:
 		generate_text()
 		

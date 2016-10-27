@@ -1,12 +1,86 @@
 ﻿from __future__ import print_function
-
 import random
 import time
 import string
 
 printable_exp = string.printable + "äöüÄÖÜß" # unser erweiterter ASCII-Zeichensatz
 printable_exp_quote = "»«›‹„“‚‘"
+verbose = False
 
+def alter_mood(f):
+	global mood
+	
+	mood_swing = random.randint(-1, 2) # Stimmungsschwankungen
+	if verbose:
+		print("mood_swing:", mood_swing)
+	
+	if f > tipping_point:
+		degree = int((f - tipping_point) / 0.2) # in "negative" Richtung ist ein Anstieg von 1 bis 5 möglich
+		mood = min(mood + degree + mood_swing, 20)
+		assert mood <= 20, "mood liegt bei:" + str(mood)
+	elif f <= tipping_point:
+		degree = int((tipping_point - f) / 0.4) * -1 # in "positive" Richtung ist eine Verringerung von 1 oder 2 möglich
+		mood = max(mood + degree + mood_swing, 1)
+		assert mood >= 1, "mood liegt bei:" + str(mood)
+		
+	return moods[mood]
+
+def get_proximity_as_diversity_and_mood(s):
+
+	word_list = remove_punctuation(s).lower().split()	
+	word_count = len(word_list)
+	weight_count = 0
+	
+	for w in word_list:
+		if w in weighted_words:
+			to_add = weighted_words[w]
+			if to_add > 1000:
+				weight_count += 10
+			elif to_add > 100:
+				weight_count += 5
+			elif to_add > 10:
+				weight_count += 2
+			else:
+				weight_count += to_add
+		else:
+			weight_count += 1
+	
+	proximity = (word_count / float(weight_count)) * 2
+	assert proximity >= 0.2, "Rechenfehler!"
+	mood_str = alter_mood(proximity)
+	if verbose:
+		print("proximity:", proximity)
+		print("mood:", mood)
+	proximity = min((proximity * (mood/10.0)) + 0.18, 2.0)
+	assert proximity <= 2.0, "Rechenfehler!"
+	
+	return proximity, mood_str
+
+def create_word_table(txt, verbosity):
+	global weighted_words, mood, tipping_point, moods, verbose
+	
+	verbose = verbosity
+	mood = 10 # Anfangswert, Maximum ist 2.0, Minimum 0.1
+	tipping_point = 1.0
+	moods = {
+		1:"verliebt in dich", 2:"freundschaftlich", 3:"freundschaftlich", 4:"freundlich", 5:"freundlich", 6:"freundlich",
+		7:"wohlgesonnen", 8:"wohlgesonnen",
+		9:"wohlgesonnen", 10:"neutral", 11:"ungeduldig",
+		12:"ungeduldig", 13:"ungeduldig", 14:"schroff",
+		15:"schroff", 16:"verärgert", 17:"verärgert",
+		18:"wütend", 19:"wütend",
+		20:"wahnsinnig vor Wut"}
+
+	weighted_words = {}
+	w_array = remove_punctuation(txt).split()
+	
+	for word in w_array:
+		if word in weighted_words:
+			weighted_words[word] += 1
+		else:
+			weighted_words[word] = 1
+
+# für das wortbasierte Netzwerk
 def convert_to_wordlist(txt, bom_removal=True):
 	punctuation = get_punctuation()
 	converted = ""
@@ -94,6 +168,14 @@ def remove_bom(txt):
 	i = txt.decode("utf-8-sig")
 	u = i.encode("utf-8")
 	return u
+	
+def remove_punctuation(txt):
+	punc = get_punctuation()
+	txt_conv = ""
+	for c in txt:
+		if c not in punc:
+			txt_conv += c
+	return  txt_conv
 
 # konvertiert den Text	
 def convert_to_expanded(txt):

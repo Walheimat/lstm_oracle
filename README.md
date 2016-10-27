@@ -18,6 +18,8 @@
 
 `--seed | -s` es wird von einem später anzugebenden Seed aus weitergeschrieben
 
+`--talk | -t` ermöglicht ein Gespräch mit einem launischen Netzwerk; diese Option ist mit alten Zeichensätzen nicht kompatibel
+
 `--diversity <Gleitkommazahl> | -d <Gleitkommazahl>` legt den Grad fest, zu dem abgewichen werden darf; standardmäßig 0.2; Höchstwert 2.0; Beispiel: `-d 1.2`
 
 ### NETZWERK TRAINIEREN

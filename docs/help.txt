@@ -14,6 +14,7 @@ HILFE/GEBRAUCHSANWEISUNG
 
 --generate <Ganzzahl> | -g <Ganzzahl> : es wird mithilfe der gespeicherten Gewichtung_nur ausgegeben_. Die geladene Matrix ist, wenn kein Limit festgelegt wurde, immer die zuletzt gespeicherte; die Zahl legt die Länge [in Zeichen] der Ausgabe fest; standardmäßig 500; Beispiel: -g 4200
 --seed | -s : es wird von einem später anzugebenden Seed aus weitergeschrieben
+--talk | -t : ermöglicht ein Gespräch mit einem launischen Netzwerk; diese Option ist mit alten Zeichensätzen nicht kompatibel
 --diversity <Gleitkommazahl> | -d <Gleitkommazahl> : legt den Grad fest, zu dem abgewichen werden darf; standardmäßig 0.2; Höchstwert 2.0; Beispiel: -d 1.2
 
 # NETZWERK TRAINIEREN #
