@@ -121,6 +121,8 @@ def get_punctuation():
 	return punctuation
 	
 def get_full_charset():
+	global number_of_unique_chars
+	
 	full_charset = ""
 	
 	# als erstes werden die white-space-Zeichen hinzugefügt
@@ -138,7 +140,8 @@ def get_full_charset():
 	return list(full_charset)
 	
 def convert_to_full(txt):
-	full_charset = get_full_charset()	
+	full_charset = get_full_charset()
+	number_of_unique_chars = len(full_charset)
 	text = remove_bom(txt)
 	decoded = list(text.decode("utf-8"))
 	out = []
@@ -146,8 +149,8 @@ def convert_to_full(txt):
 		if c in full_charset:
 			out.append(c)
 	new_out = "".join(out)
-	
-	return new_out
+
+	return new_out, number_of_unique_chars
 	
 def generate_seed():
 	sequence = list(string.hexdigits)

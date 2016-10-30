@@ -170,8 +170,8 @@ def generate_text():
 		preds = model.predict(x, verbose=0)[0]
 		next_index = sample(preds, diversity)
 		if not expanded and not ascii:
-			if next_index > 159:
-				next_index = 159
+			if next_index > unique_no - 1:
+				next_index = unique_no - 1
 				errors += 1
 		next_char = indices_char[next_index]
 		generated += next_char
@@ -226,8 +226,8 @@ def talk_with_network():
 			preds = model.predict(x, verbose=0)[0]
 			next_index = sample(preds, diversity)
 			if not expanded and not ascii:
-				if next_index > 159:
-					next_index = 159
+				if next_index > unique_no - 1:
+					next_index = unique_no - 1
 					errors += 1
 			next_char = indices_char[next_index]
 			
@@ -286,8 +286,8 @@ def generate_with_arbitrary_seed():
 		preds = model.predict(x, verbose=0)[0]
 		next_index = sample(preds, diversity)
 		if not expanded and not ascii:
-			if next_index > 159:
-				next_index = 159
+			if next_index > unique_no - 1:
+				next_index = unique_no - 1
 				errors += 1
 		next_char = indices_char[next_index]
 		
@@ -383,7 +383,7 @@ def check_arguments(opts):
 
 # Programm			
 def main():
-	global text, character_limit, scope
+	global text, character_limit, scope, unique_no
 	scope = 40 # ich nenne das mal "scope", notfalls kann man den Wert dann hier verändern
 	
 	# die Argumente der Befehlszeile werden eingelesen
@@ -422,7 +422,7 @@ def main():
 			else:
 				t = file.read()
 				manip.create_word_table(t, verbose)
-				input_c = manip.convert_to_full(t)
+				input_c, unique_no = manip.convert_to_full(t)
 	except EnvironmentError:
 		print("Datei {0} nicht gefunden!".format(input))
 		sys.exit(2)

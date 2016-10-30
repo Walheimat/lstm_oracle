@@ -38,7 +38,7 @@
 
 1. Du willst ein neues Netzwerk mit einem Text in voller Länge trainieren und möglichst alle Zeichen berücksichtigen. Da bei langen Texten jede Epoche viel Zeit in Anspruch nimmt, könnte man die Anzahl der Epochen heruntersetzen:
   ```
-  python lstm_char.py --input roomwithaview.txt --new --epochs 5 --limit max --experimental
+  python lstm_char.py --input roomwithaview.txt --new --epochs 5 --limit max
   ```
 
 2. Du willst dieses Netzwerk nach Abschluss des Trainings in derselben Konfiguration zu einem beliebigen Zeitpunkt erneut trainieren:
@@ -48,7 +48,7 @@
 
 3. Du willst dieses Netzwerk (durch die Zeichenbeschränkung identifiziert) nach Abschluss des Trainings mit einer anderen Anzahl an Epochen erneut trainieren:
   ```
-  python lstm_char.py --input roomwithaview.txt --limit max --epochs 20 --experimental
+  python lstm_char.py --input roomwithaview.txt --limit max --epochs 20
   ```
 
 4. Du willst ein Netzwerk möglichst schnell trainieren. Dafür könntest du ein niedriges Limit setzen und nur den ASCII-Zeichensatz verwenden:
